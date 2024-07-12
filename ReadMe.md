@@ -1,3 +1,6 @@
+Download the Zip and extract to a location on your PC
+https://github.com/CleverPet/CleverPet_Setup/releases
+
 Download Particle CLI 
 https://docs.particle.io/getting-started/developer-tools/cli/
 

@@ -1,0 +1,2 @@
+python HackerPet_Setup.py
+pause
