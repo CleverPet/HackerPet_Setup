@@ -1,13 +1,19 @@
-Download the Zip and extract to a location on your PC
+1) Download the HackerPet_Setup.Zip
 https://github.com/CleverPet/HackerPet_Setup/releases
 
-Download Particle CLI 
+2) Extract the zip to any location you have full write permissions on your PC
+Make note of that location.
+
+3) Download and install Particle CLI - Link and instructions below
 https://docs.particle.io/getting-started/developer-tools/cli/
 
-Download and install Python 3 
+4) Download and install Python 3 - Link below. 
+Also make sure to check the box for [X] "add python.exe to PATH" 
+( check box at the bottom of first screen of installer )
 https://www.python.org/downloads/
 
-For windows open the cmd prompt
+5) For windows open the cmd prompt
+Navigate to where you extracted the folder
 Run the HackerPet_Setup.bat
 
 or for mac or linux run 
