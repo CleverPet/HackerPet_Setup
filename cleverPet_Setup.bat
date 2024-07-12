@@ -1,0 +1,2 @@
+python cleverPet_Setup.py
+pause
