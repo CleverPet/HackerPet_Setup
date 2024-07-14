@@ -22,3 +22,12 @@ python HackerPet_Setup.py
 Any issues, email support@clever.pet
 
 Brian
+
+-- To Do --
+ - Flash the latest HackerPet firmware from the web in the command line
+   - detect type of Particle board, photon, p1, photon 2, etc...
+   
+ - Allow setting up the photon without a particle account.
+    - update Device OS
+    - configure wifi
+    - flash the HackerPet firmware

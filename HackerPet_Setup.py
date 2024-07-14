@@ -1,15 +1,23 @@
 #! /usr/bin/python
-version = 0.1
+version = '0.1.2'
 # command line executer from library
 # import bgcommandThingy
 from tools import subpTools
 from tools import cursor as c
-import getpass, time, re
+c.clearScreen()
+import getpass, time, re, os
 import sys, webbrowser, subprocess, json
+from importlib import reload
 
 loggedIN = ''
 email = ''
 YorN = f'({c.Green}Y{c.End} or {c.Red}N{c.End})'
+
+def exit():
+    # print('Press any key to continue.')
+    os.system('pause')
+    sys.exit()
+    
 
 def goodbye( success ):
     if success:
@@ -44,7 +52,7 @@ def loginSuccesCheck( loggedIN ):
 def particleLogin( skipLogin = False ):
     email = ''
     if skipLogin == False:
-        whoamiResults = subpTools.open( ['particle', 'whoami'] )
+        whoamiResults = subpTools.open( ['particle', 'whoami'], shellOption=True )
         # time.sleep(3)
         if loginSuccesCheck( whoamiResults ) == False:
             # something = subprocess.Popen(['particle', 'login'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
@@ -103,35 +111,40 @@ def returnUSBDevices():
     devices = subpTools.open( ['particle', 'usb','list'] )
     deviceID = ''
     deviceIDs = []
+    updateResponse = ''
     # print(f'serialDevices == {serialDevices}')
     # print(f'devices == {devices}')
     serialDevicesFound = safeInt( serialDevices[0].split(' ')[1] )
     if serialDevicesFound == -1:
-        print(f'{c.Red}No Hub Photons found, please plugin the Hubs Photon with a micro USB cable and run again.{c.End}')
-        goodbye( False )
+        print(f'{c.Red}No Hub Photons found, please plugin the Hubs Photon with a micro USB cable and run the setup again.{c.End}')
+        updateResponse = input(f'Would you like to continue and update the HackerPet firmware over the web? {YorN}')
+        if updateResponse.lower() != 'y':
+            goodbye( False )
 
-    if serialDevicesFound != len(devices):
-        print(f'{c.Yellow}You need to update the OS on your Hubs Photon, push both Buttons, then release the bottom one until the light flashes Yellow.{c.End}')
-        input(f'{c.Green}Press a key to continue...{c.End}')
-        print(f'Updating os, please wait and do not unplug your Hubs photon...{c.DarkMagenta}')
-        updateResult = subpTools.open( ['particle', 'update'], verbose=True ) 
-        print(f'{c.Yellow}{updateResult[-1]}{c.End}')
-        print(f'Device OS update complete!  \nIf the above result did not complete succesfully, restart and try again. Otherwise contact {c.Yellow}support@clever.pet{c.End}')
+    if serialDevicesFound != -1:
+        if serialDevicesFound != len(devices):
+            print(f'{c.Yellow}You need to update the OS on your Hubs Photon, push both Buttons, then release the bottom one until the light flashes Yellow.{c.End}')
+            input(f'{c.Green}Press a key to continue...{c.End}')
+            print(f'Updating os, please wait and do not unplug your Hubs photon...{c.DarkMagenta}')
+            updateResult = subpTools.open( ['particle', 'update'], verbose=True ) 
+            print(f'{c.Yellow}{updateResult[-1]}{c.End}')
+            print(f'Device OS update complete!  \nIf the above result did not complete succesfully, restart and try again. Otherwise contact {c.Yellow}support@clever.pet{c.End}')
 
-    for each in devices:
-        deviceID = each.split( '[' )
-        # input(f'deviceID == {deviceID}')
-        try:
-            deviceID = deviceID[1].split( ']' )
-            deviceID = deviceID[0]
-            print( f'Found Photon: {deviceID}' )
-            deviceIDs.append(deviceID)
-            if len(deviceID) != 24:
-                input( 'Could not find a device ID' )
-        except:
-            tryAgainResponse = input( f'No device found connected to your computer. Plug in your Hub and Try again? {YorN}:' )
-            if tryAgainResponse.lower() == 'y':
-                returnUSBDevices()
+    if updateResponse.lower() != 'y':
+        for each in devices:
+            deviceID = each.split( '[' )
+            # input(f'deviceID == {deviceID}')
+            try:
+                deviceID = deviceID[1].split( ']' )
+                deviceID = deviceID[0]
+                print( f'Found Photon: {deviceID}' )
+                deviceIDs.append(deviceID)
+                if len(deviceID) != 24:
+                    input( 'Could not find a device ID' )
+            except:
+                tryAgainResponse = input( f'No device found connected to your computer. Plug in your Hub and Try again? {YorN}:' )
+                if tryAgainResponse.lower() == 'y':
+                    returnUSBDevices()
             # else:
             #     exit()
     # print(f'devices == {devices}' )
@@ -203,19 +216,23 @@ def wifiSetup( setupFile = 'wifiCred.json'):
     return setupResult
 
 def particleCLICheck() -> bool:
+    reload(subpTools)
+
     success = False
-    results = subpTools.open(['particle'], verbose = True, output = True)
-    print(results)
+    results = subpTools.open(['particle', 'help'], verbose = False, output = True)
+    # print( results )
     if len(results) > 0:
         if 'welcome' in results[0].lower():
             # particle installed
             print(f'{c.Green}Particle CLI {results[1]}{c.End}')
             success = True
+        else:
+            print(f'{c.Red}Particle CLI required!{c.End}\n Download and installtion instructions available from link below:\n{c.Green}https://docs.particle.io/getting-started/developer-tools/cli/')
     return success
 
 ## Main ####
 def claimParticle( deviceID ):
-   # claim particle device
+    # claim particle device
     print( 'claiming device...' )
     # input(f' claimedDevices == {claimedDevices}')
     claimedDevices = returnClaimedDevices()
@@ -238,7 +255,8 @@ def claimParticle( deviceID ):
     return currentDevice
 
 def main():
-    print(f'CleverPet HackerPet Setup v{version}')
+    # check see if there's an update and change the color if it's old?
+    print(f'{c.DarkMagenta}HackerPet Setup {c.Green}v{version}{c.End}')
 
     # check for particle install
     if particleCLICheck() == False:
@@ -247,56 +265,64 @@ def main():
     s = -1
     deviceIDs = returnUSBDevices()
     print(f'({c.Yellow}{len(deviceIDs)}{c.End}) Devices found plugged in.\n')
-
     # claimedDevices_dict = returnClaimedDevices()
 
     # only 1 allowed right now
     selectedDevice = 1-1
-    if len( deviceIDs ) > 1:
+    devicesPluggedIn = len(deviceIDs)
+    if devicesPluggedIn > 1:
         input(f'This setup only allows setting up one Hub at a time, unplug all but one, and press {c.Green}Enter{c.End} key to retry.')
         main()
 
-    # Wifi Setup
-    wifiSetupResult = wifiSetup()
-    # input(f'wifiSetupResult =={wifiSetupResult}')
+    # unused at the moment
+    wifiSetupResult = ''
+    if devicesPluggedIn >= 1:
+        # Wifi Setup
+        wifiSetupResult = wifiSetup()
+        # input(f'wifiSetupResult =={wifiSetupResult}')
 
-    claimedDevice = claimParticle( deviceIDs[selectedDevice] )
+    claimedDevice = ''
+    if devicesPluggedIn >= 1:
+        claimedDevice = claimParticle( deviceIDs[selectedDevice] )
 
-    if selectedDevice >= 0:
-        # Name the device
-        deviceName = "Fluffy's Arcade Machine"
-        if claimedDevice['name']:
-            deviceName = claimedDevice['name']
 
-        chosenName = input( f"Would you like (Re)Name your CleverPet Hub? (ie, {c.Yellow}{deviceName}{c.End}, {c.Red}N{c.End} to skip): " )
-        # print( chosenName )
-        if chosenName.lower() != 'n':
-            if chosenName.lower() != '':
-                subpTools.open( ['particle', 'cloud', 'name', deviceIDs[s], chosenName], shellOption = True )
-        else:
-            print( 'No Name entered, skipping (Re)Name.' )
+    if claimedDevice != '':
+        if selectedDevice >= 0:
+            # Name the device
+            deviceName = "Fluffy's Arcade Machine"
+            if claimedDevice['name']:
+                deviceName = claimedDevice['name']
 
-        # Compile and flash hackerpet_plus firmware.
-        # particle library create
-        # particle library create --name hackerpet_plus --version 0.1.114 --author CleverPet --dir .
-        # particle flash DeviceID
+            chosenName = input( f"Would you like (Re)Name your CleverPet Hub? (ie, {c.Yellow}{deviceName}{c.End}, {c.Red}N{c.End} to skip): " )
+            # print( chosenName )
+            if chosenName.lower() != 'n':
+                if chosenName.lower() != '':
+                    subpTools.open( ['particle', 'cloud', 'name', deviceIDs[s], chosenName], shellOption = True )
+            else:
+                print( 'No Name entered, skipping (Re)Name.' )
 
-        consoleResult = input(f'Would you like to open the particle Console in your Browser to review your Hub connection status? {c.DarkMagenta}https://console.particle.io/devices{c.End}  {YorN}:')
-        if consoleResult.lower() == 'y':
-            webbrowser.open( 'https://console.particle.io/devices' )
+            # Compile and flash hackerpet_plus firmware.
+            # particle library create
+            # particle library create --name hackerpet_plus --version 0.1.114 --author CleverPet --dir .
+            # particle flash DeviceID
 
-        HPResult = input(f'Would you like to open {c.DarkMagenta}https://build.particle.io/libs/hackerpet_plus{c.End} and install or update HackerPet_Plus? {YorN}')
-        if 'y' in HPResult.lower():
-            print(f'{c.Green}HackerPet_Plus Installation Instructions{c.End}:\n              1) Scroll down on the left column to particle-test-local.ino and click on that.\n              2) Then scroll all the down one more time and click on the Blue Button "Use This Example".')
-            print('              3) Double check your Hub is selected int the bottom right corner, \n              4) Then click on the lightning bolt in the very top left corner to send the firmware to your Hub.')
-            print(f'\n              Once that is complete, just navigate to {c.DarkMagenta}http://cleverpet.local{c.End} with any device on your local network to configure your hub and select a game.')
-            webbrowser.open( 'https://build.particle.io/libs/hackerpet_plus' )
 
-        cpLocalAnser = input(f'Would you like to open{c.DarkMagenta} http://cleverpet.local{c.End} To configure your CleverPet Hub?{YorN}')
-        if cpLocalAnser.lower() == 'y':
-            webbrowser.open( 'http://cleverpet.local' )
-            print('If this address does not resolve to a site, check your router for the Hubs IP address and replace cleverpet.local with IP.')
-            print(f'If you need additional help, email {c.DarkMagenta}support@clever.pet{c.End} to schedule a 1 on 1 video call to finish the setup.')
+    consoleResult = input(f'Would you like to open the particle Console in your Browser to review your Hub connection status? {c.DarkMagenta}https://console.particle.io/devices{c.End}  {YorN}:')
+    if consoleResult.lower() == 'y':
+        webbrowser.open( 'https://console.particle.io/devices' )
+
+    HPResult = input(f'Would you like to open {c.DarkMagenta}https://build.particle.io/libs/hackerpet_plus{c.End} and install or update HackerPet_Plus? {YorN}')
+    if 'y' in HPResult.lower():
+        print(f'{c.Green}HackerPet_Plus Installation Instructions{c.End}:\n              1) Scroll down on the left column to particle-test-local.ino and click on that.\n              2) Then scroll all the down one more time and click on the Blue Button "Use This Example".')
+        print('              3) Double check your Hub is selected int the bottom right corner, \n              4) Then click on the lightning bolt in the very top left corner to send the firmware to your Hub.')
+        print(f'\n              Once that is complete, just navigate to {c.DarkMagenta}http://cleverpet.local{c.End} with any device on your local network to configure your hub and select a game.')
+        webbrowser.open( 'https://build.particle.io/libs/hackerpet_plus' )
+
+    cpLocalAnser = input(f'Would you like to open{c.DarkMagenta} http://cleverpet.local{c.End} To configure your CleverPet Hub?{YorN}')
+    if cpLocalAnser.lower() == 'y':
+        webbrowser.open( 'http://cleverpet.local' )
+        print('If this address does not resolve to a site, check your router for the Hubs IP address and replace cleverpet.local with IP.')
+        print(f'If you need additional help, email {c.DarkMagenta}support@clever.pet{c.End} to schedule a 1 on 1 video call to finish the setup.')
 
     goodbye( True )
 

@@ -4,11 +4,13 @@ import subprocess, io
 def PopenResultStream( result, verbose = True, output = True ) -> list:
     CLEAR = '\x1b[2K'
     outputList = []
-    for line in io.TextIOWrapper( result, encoding="utf-8"):
-        saveLine = line.rstrip()
-        outputList.append( saveLine )
-        if verbose == True:
-            print( saveLine )
+    outerr = [result.stdout, result.stderr]
+    for eachResult in outerr:
+        for line in io.TextIOWrapper( eachResult, encoding="utf-8"):
+            saveLine = line.rstrip()
+            outputList.append( saveLine )
+            if verbose == True:
+                print( saveLine )
     if output == True:
         # print(f'#################### outputing list...: {outputList}')
         return outputList
@@ -25,10 +27,10 @@ def interactive( commandList: list ):
             break
         p.stdin.write( line.encode() )
 
-def open( commandList: list, verbose = False, output = True, shellOption = False  ) -> list:
+def open( commandList: list, verbose = False, output = True, shellOption = True  ) -> list:
     CLEAR = '\x1b[2K'
     result = subprocess.Popen( commandList, shell=shellOption, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True )
     outputList = []
     # Prints and replaces each line as subprocess outputs info.
-    outputList = PopenResultStream( result.stdout, verbose = verbose, output = output  )
+    outputList = PopenResultStream( result, verbose = verbose, output = output  )
     return outputList
