@@ -32,14 +32,17 @@ zipFileName_versionless = f'{releaseLocation}/{fileName}.zip'
 if Path(zipFileName).exists():
     os.remove(zipFileName)
 opperatingSystem = sys.platform
+
+# needs work, for now, don't exclude either .bat or .sh
 systemList = ['.bat', '.sh']
 if opperatingSystem == 'win32':
-    systemList.pop(0)
+    systemList.pop(1)
+
 # excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'compile.bat', 'releaseZip.py', '.zip', '__pycache__']
 # wifiCred.json may hold a local wifi password, never ship it.
 excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'releaseZip.py', '__pycache__', 'wifiCred.json']
 
-excludeList.extend(systemList)
+# excludeList.extend(systemList)
 
 indexToRemove = []
 
@@ -65,16 +68,6 @@ def walk_dir():
             fileList.append(f"{level}{seperator}{file}")
             # print(f"{root}\{file}")
     return fileList
-
-# walk_dir('/path/to/directory')
-
-# def listAllFiles():
-#     root_dir = Path.cwd()
-#     for root, dirs, files in os.walk( root_dir ):
-#         for file in files:
-#             print(files)
-#             # file_path = os.path.join(root, file)
-#     # print(file_path)
 
 fileList = walk_dir()
 

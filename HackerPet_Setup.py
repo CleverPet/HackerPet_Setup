@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version = '0.1.2'
+version = '0.1.3'
 # command line executer from library
 # import bgcommandThingy
 from tools import subpTools
@@ -16,7 +16,7 @@ def exit():
     # print('Press any key to continue.')
     input('Press Enter to continue...')
     sys.exit()
-    
+
 
 def goodbye( success ):
     if success:
@@ -73,7 +73,7 @@ def particleLogin( skipLogin = False ):
                     goodbye( False )
                 if inputResult.lower() == 's':
                     return email
-        
+
         loggedIN = subpTools.open( ['particle', 'whoami'] )
         email = loggedIN[0].split(' ')[1]
         # input(email)
@@ -121,7 +121,7 @@ def returnUSBDevices():
             print(f'{c.Yellow}You need to update the OS on your Hubs Photon, push both Buttons, then release the bottom one until the light flashes Yellow.{c.End}')
             input(f'{c.Green}Press a key to continue...{c.End}')
             print(f'Updating os, please wait and do not unplug your Hubs photon...{c.DarkMagenta}')
-            updateResult = subpTools.open( ['particle', 'update'], verbose=True ) 
+            updateResult = subpTools.open( ['particle', 'update'], verbose=True )
             print(f'{c.Yellow}{updateResult[-1]}{c.End}')
             print(f'Device OS update complete!  \nIf the above result did not complete succesfully, restart and try again. Otherwise contact {c.Yellow}support@clever.pet{c.End}')
 
@@ -179,7 +179,7 @@ def enterListening( ):
         else:
             attempts = 3
     return
-    
+
 def wifiSetup():
     success = False
     # interactive so shell maybe?
