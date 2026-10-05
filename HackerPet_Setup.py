@@ -1,12 +1,11 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 version = '0.1.2'
 # command line executer from library
 # import bgcommandThingy
 from tools import subpTools
 from tools import cursor as c
-c.clearScreen()
 import getpass, time, re, os
-import sys, webbrowser, subprocess, json
+import sys, webbrowser, subprocess, json, tempfile
 from importlib import reload
 
 loggedIN = ''
@@ -15,7 +14,7 @@ YorN = f'({c.Green}Y{c.End} or {c.Red}N{c.End})'
 
 def exit():
     # print('Press any key to continue.')
-    os.system('pause')
+    input('Press Enter to continue...')
     sys.exit()
     
 
@@ -52,7 +51,7 @@ def loginSuccesCheck( loggedIN ):
 def particleLogin( skipLogin = False ):
     email = ''
     if skipLogin == False:
-        whoamiResults = subpTools.open( ['particle', 'whoami'], shellOption=True )
+        whoamiResults = subpTools.open( ['particle', 'whoami'] )
         # time.sleep(3)
         if loginSuccesCheck( whoamiResults ) == False:
             # something = subprocess.Popen(['particle', 'login'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
@@ -80,8 +79,6 @@ def particleLogin( skipLogin = False ):
         # input(email)
     return email
 
-email = particleLogin()
-
 # accountAnswer = input( 'Do you have a particle.io account? (Y or N):' )
 # if accountAnswer.lower() != 'y':
 #     print('Exiting, particle account required, please go to https://login.particle.io/signup and create a free personal account to continue the setup.')
@@ -96,8 +93,6 @@ email = particleLogin()
 #     subpTools.open( ['particle', 'login', '--username', username, '--password', password], verbose= False )
 #     loggedIN = subpTools.open( ['particle', 'whoami'] )
 #     email = loggedIN[0].split(' ')[1]
-
-print(f'Welcome {c.Green}{email}{c.End}')
 
 # Deivce in DFU Mode for update
 deviceIDs = []
@@ -185,7 +180,7 @@ def enterListening( ):
             attempts = 3
     return
     
-def wifiSetup( setupFile = 'wifiCred.json'):
+def wifiSetup():
     success = False
     # interactive so shell maybe?
     # dfu mode before wifi setup
@@ -200,15 +195,20 @@ def wifiSetup( setupFile = 'wifiCred.json'):
             break
         if wifiSetupResult.lower() == 'y':
             enterListening()
-            with open( setupFile, 'r' ) as f:
-                wifiCredJson = json.load(f)
+            wifiCredJson = { 'network': '', 'security': 'WPA2_AES', 'password': '' }
             wifiCredJson['network'] = input(f'Enter your 2.4Ghz Netwrok Wifi Name. (ie,"{c.Yellow}My SSID Name!{c.End}"):')
             wifiCredJson['password'] = input(f'Enter your SSID Password: ({c.Yellow}#CaPiTalzM4ttEr!{c.End}):')
             # print( 'Setting up wifi' )
-            with open( setupFile, 'w' ) as f:
-                json.dump( wifiCredJson, f )
-            # subpTools.open( ['particle', 'serial', 'wifi'], shellOption=True, verbose = True )
-            setupResult = subpTools.open( ['particle', 'serial', 'wifi', '--file', setupFile], verbose = True )
+            # The credentials file is only needed by this one particle call, so it is
+            # written to a private temp file (mode 0600) and deleted right after.
+            fd, setupFile = tempfile.mkstemp( prefix='wifiCred_', suffix='.json' )
+            try:
+                with os.fdopen( fd, 'w' ) as f:
+                    json.dump( wifiCredJson, f )
+                # subpTools.open( ['particle', 'serial', 'wifi'], shellOption=True, verbose = True )
+                setupResult = subpTools.open( ['particle', 'serial', 'wifi', '--file', setupFile], verbose = True )
+            finally:
+                os.remove( setupFile )
             if setupResult == []:
                 input('Wifi Setup failed, unplug and replug the USB and press enter to try again.')
             else:
@@ -246,7 +246,7 @@ def claimParticle( deviceID ):
     # s = selectedDevice
     if deviceClaimed == False:
         print(c.BYellow )
-        claimResults = subpTools.open( ['particle', 'cloud', 'claim', deviceID], shellOption = True, verbose = True )
+        claimResults = subpTools.open( ['particle', 'cloud', 'claim', deviceID], verbose = True )
         # input(f'claimResults == {claimResults}')
         claimedDevices = returnClaimedDevices()
         for each in claimedDevices:
@@ -297,7 +297,7 @@ def main():
             # print( chosenName )
             if chosenName.lower() != 'n':
                 if chosenName.lower() != '':
-                    subpTools.open( ['particle', 'cloud', 'name', deviceIDs[s], chosenName], shellOption = True )
+                    subpTools.open( ['particle', 'cloud', 'name', deviceIDs[s], chosenName] )
             else:
                 print( 'No Name entered, skipping (Re)Name.' )
 
@@ -327,5 +327,8 @@ def main():
     goodbye( True )
 
 if __name__ == '__main__':
+    c.clearScreen()
+    email = particleLogin()
+    print(f'Welcome {c.Green}{email}{c.End}')
     main()
 ######

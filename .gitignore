@@ -163,3 +163,5 @@ cython_debug/
 
 # added
 *.zip
+# wifi credentials, may contain a real password
+wifiCred.json

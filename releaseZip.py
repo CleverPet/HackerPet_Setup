@@ -36,7 +36,8 @@ systemList = ['.bat', '.sh']
 if opperatingSystem == 'win32':
     systemList.pop(0)
 # excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'compile.bat', 'releaseZip.py', '.zip', '__pycache__']
-excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'releaseZip.py', '__pycache__']
+# wifiCred.json may hold a local wifi password, never ship it.
+excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'releaseZip.py', '__pycache__', 'wifiCred.json']
 
 excludeList.extend(systemList)
 
@@ -50,7 +51,7 @@ def walk_dir():
 
         level = root.replace(f'{directory}', '')
         if len(level) >= 1:
-            if level[0] == '\\':
+            if level[0] == os.sep:
                 level = level[1:]
         # print(f'level == {level}')
 
@@ -58,7 +59,7 @@ def walk_dir():
         # indent = '---' * (level)
         # print(f"{root}")
         for file in files:
-            seperator = '\\'
+            seperator = os.sep
             if level == '':
                 seperator = ''
             fileList.append(f"{level}{seperator}{file}")
