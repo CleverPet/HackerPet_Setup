@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 version = '0.1.2'
 # command line executer from library
 # import bgcommandThingy
@@ -12,10 +12,13 @@ from importlib import reload
 loggedIN = ''
 email = ''
 YorN = f'({c.Green}Y{c.End} or {c.Red}N{c.End})'
+# Folder holding wifiCred.json: the script's folder, so it works from any cwd.
+# A PyInstaller build keeps the previous cwd-relative behaviour.
+baseDir = '' if getattr( sys, 'frozen', False ) else os.path.dirname( os.path.abspath( __file__ ) )
 
 def exit():
     # print('Press any key to continue.')
-    os.system('pause')
+    input('Press Enter to continue...')
     sys.exit()
     
 
@@ -52,7 +55,7 @@ def loginSuccesCheck( loggedIN ):
 def particleLogin( skipLogin = False ):
     email = ''
     if skipLogin == False:
-        whoamiResults = subpTools.open( ['particle', 'whoami'], shellOption=True )
+        whoamiResults = subpTools.open( ['particle', 'whoami'] )
         # time.sleep(3)
         if loginSuccesCheck( whoamiResults ) == False:
             # something = subprocess.Popen(['particle', 'login'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
@@ -185,7 +188,7 @@ def enterListening( ):
             attempts = 3
     return
     
-def wifiSetup( setupFile = 'wifiCred.json'):
+def wifiSetup( setupFile = os.path.join( baseDir, 'wifiCred.json' ) ):
     success = False
     # interactive so shell maybe?
     # dfu mode before wifi setup
@@ -246,7 +249,7 @@ def claimParticle( deviceID ):
     # s = selectedDevice
     if deviceClaimed == False:
         print(c.BYellow )
-        claimResults = subpTools.open( ['particle', 'cloud', 'claim', deviceID], shellOption = True, verbose = True )
+        claimResults = subpTools.open( ['particle', 'cloud', 'claim', deviceID], verbose = True )
         # input(f'claimResults == {claimResults}')
         claimedDevices = returnClaimedDevices()
         for each in claimedDevices:
@@ -297,7 +300,7 @@ def main():
             # print( chosenName )
             if chosenName.lower() != 'n':
                 if chosenName.lower() != '':
-                    subpTools.open( ['particle', 'cloud', 'name', deviceIDs[s], chosenName], shellOption = True )
+                    subpTools.open( ['particle', 'cloud', 'name', deviceIDs[s], chosenName] )
             else:
                 print( 'No Name entered, skipping (Re)Name.' )
 

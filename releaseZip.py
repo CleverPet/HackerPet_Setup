@@ -50,7 +50,7 @@ def walk_dir():
 
         level = root.replace(f'{directory}', '')
         if len(level) >= 1:
-            if level[0] == '\\':
+            if level[0] == os.sep:
                 level = level[1:]
         # print(f'level == {level}')
 
@@ -58,7 +58,7 @@ def walk_dir():
         # indent = '---' * (level)
         # print(f"{root}")
         for file in files:
-            seperator = '\\'
+            seperator = os.sep
             if level == '':
                 seperator = ''
             fileList.append(f"{level}{seperator}{file}")
