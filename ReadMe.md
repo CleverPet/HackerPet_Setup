@@ -38,8 +38,6 @@ HackerPet_Setup is a command-line tool that sets up the Particle Photon in a Cle
      python3 HackerPet_Setup.py
      ```
 
-The Wi-Fi network name and password you enter during setup are saved in `wifiCred.json` in the setup folder.
-
 ## Troubleshooting
 
 - **No Hub Photons found**: plug in the Hub's Photon with a micro USB cable and run the setup again.
