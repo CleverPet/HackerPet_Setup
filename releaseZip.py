@@ -36,7 +36,8 @@ systemList = ['.bat', '.sh']
 if opperatingSystem == 'win32':
     systemList.pop(0)
 # excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'compile.bat', 'releaseZip.py', '.zip', '__pycache__']
-excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'releaseZip.py', '__pycache__']
+# wifiCred.json may hold a local wifi password, never ship it.
+excludeList = ['build', 'dist', '.gitignore', 'Releases', '.spec', '.git', 'releaseZip.py', '__pycache__', 'wifiCred.json']
 
 excludeList.extend(systemList)
 

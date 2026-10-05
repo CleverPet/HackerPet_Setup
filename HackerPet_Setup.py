@@ -4,17 +4,13 @@ version = '0.1.2'
 # import bgcommandThingy
 from tools import subpTools
 from tools import cursor as c
-c.clearScreen()
 import getpass, time, re, os
-import sys, webbrowser, subprocess, json
+import sys, webbrowser, subprocess, json, tempfile
 from importlib import reload
 
 loggedIN = ''
 email = ''
 YorN = f'({c.Green}Y{c.End} or {c.Red}N{c.End})'
-# Folder holding wifiCred.json: the script's folder, so it works from any cwd.
-# A PyInstaller build keeps the previous cwd-relative behaviour.
-baseDir = '' if getattr( sys, 'frozen', False ) else os.path.dirname( os.path.abspath( __file__ ) )
 
 def exit():
     # print('Press any key to continue.')
@@ -83,8 +79,6 @@ def particleLogin( skipLogin = False ):
         # input(email)
     return email
 
-email = particleLogin()
-
 # accountAnswer = input( 'Do you have a particle.io account? (Y or N):' )
 # if accountAnswer.lower() != 'y':
 #     print('Exiting, particle account required, please go to https://login.particle.io/signup and create a free personal account to continue the setup.')
@@ -99,8 +93,6 @@ email = particleLogin()
 #     subpTools.open( ['particle', 'login', '--username', username, '--password', password], verbose= False )
 #     loggedIN = subpTools.open( ['particle', 'whoami'] )
 #     email = loggedIN[0].split(' ')[1]
-
-print(f'Welcome {c.Green}{email}{c.End}')
 
 # Deivce in DFU Mode for update
 deviceIDs = []
@@ -188,7 +180,7 @@ def enterListening( ):
             attempts = 3
     return
     
-def wifiSetup( setupFile = os.path.join( baseDir, 'wifiCred.json' ) ):
+def wifiSetup():
     success = False
     # interactive so shell maybe?
     # dfu mode before wifi setup
@@ -203,15 +195,20 @@ def wifiSetup( setupFile = os.path.join( baseDir, 'wifiCred.json' ) ):
             break
         if wifiSetupResult.lower() == 'y':
             enterListening()
-            with open( setupFile, 'r' ) as f:
-                wifiCredJson = json.load(f)
+            wifiCredJson = { 'network': '', 'security': 'WPA2_AES', 'password': '' }
             wifiCredJson['network'] = input(f'Enter your 2.4Ghz Netwrok Wifi Name. (ie,"{c.Yellow}My SSID Name!{c.End}"):')
             wifiCredJson['password'] = input(f'Enter your SSID Password: ({c.Yellow}#CaPiTalzM4ttEr!{c.End}):')
             # print( 'Setting up wifi' )
-            with open( setupFile, 'w' ) as f:
-                json.dump( wifiCredJson, f )
-            # subpTools.open( ['particle', 'serial', 'wifi'], shellOption=True, verbose = True )
-            setupResult = subpTools.open( ['particle', 'serial', 'wifi', '--file', setupFile], verbose = True )
+            # The credentials file is only needed by this one particle call, so it is
+            # written to a private temp file (mode 0600) and deleted right after.
+            fd, setupFile = tempfile.mkstemp( prefix='wifiCred_', suffix='.json' )
+            try:
+                with os.fdopen( fd, 'w' ) as f:
+                    json.dump( wifiCredJson, f )
+                # subpTools.open( ['particle', 'serial', 'wifi'], shellOption=True, verbose = True )
+                setupResult = subpTools.open( ['particle', 'serial', 'wifi', '--file', setupFile], verbose = True )
+            finally:
+                os.remove( setupFile )
             if setupResult == []:
                 input('Wifi Setup failed, unplug and replug the USB and press enter to try again.')
             else:
@@ -330,5 +327,8 @@ def main():
     goodbye( True )
 
 if __name__ == '__main__':
+    c.clearScreen()
+    email = particleLogin()
+    print(f'Welcome {c.Green}{email}{c.End}')
     main()
 ######
